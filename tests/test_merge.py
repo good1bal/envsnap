@@ -52,6 +52,13 @@ def test_merge_conflict_last():
     assert result["variables"]["FOO"] == "last"
 
 
+def test_merge_conflict_invalid_strategy_raises():
+    a = _snap("a", {"FOO": "1"})
+    b = _snap("b", {"FOO": "2"})
+    with pytest.raises(ValueError, match="on_conflict"):
+        merge(a, b, on_conflict="invalid")
+
+
 def test_merge_checksum_present():
     snap = _snap("x", {"A": "1"})
     result = merge(snap)
