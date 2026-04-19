@@ -33,7 +33,12 @@ def truncate_values(
 
     Returns:
         TruncateResult with the modified snapshot and metadata.
+
+    Raises:
+        ValueError: if *max_length* is negative or less than ``len(suffix)``.
     """
+    if max_length < 0:
+        raise ValueError(f"max_length ({max_length}) must be non-negative")
     if max_length < len(suffix):
         raise ValueError(
             f"max_length ({max_length}) must be >= len(suffix) ({len(suffix)})"
