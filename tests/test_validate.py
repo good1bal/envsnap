@@ -77,3 +77,11 @@ def test_validation_summary_invalid():
 def test_multiple_errors():
     result = validate(_snap({"BAD": "x"}), required=["A", "B"], forbidden=["BAD"])
     assert len(result.errors) == 3
+
+
+def test_validation_summary_includes_warning_count():
+    """Summary for a valid-but-warned result should mention the warning count."""
+    result = validate(_snap({"FOO": ""}), nonempty=["FOO"])
+    summary = validation_summary(result)
+    assert "warning" in summary.lower()
+    assert "FOO" in summary
