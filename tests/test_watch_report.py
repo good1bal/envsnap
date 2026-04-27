@@ -56,6 +56,14 @@ def test_format_shows_changed_key():
     assert "~" in report
 
 
+def test_format_includes_poll_index():
+    """Report should reference the poll index for each change event."""
+    event = _event(added=["FOO"], poll_index=3)
+    session = _session(events=[event])
+    report = format_watch_report(session)
+    assert "3" in report
+
+
 def test_summary_no_changes():
     session = _session(polls=4)
     s = watch_summary(session)
@@ -69,3 +77,15 @@ def test_summary_with_changes():
     s = watch_summary(session)
     assert "1 change event" in s
     assert "2 total key changes" in s
+
+
+def test_summary_multiple_events():
+    """Summary should aggregate counts across multiple change events."""
+    events = [
+        _event(added=["A", "B"], poll_index=1),
+        _event(removed=["C"], changed=["D"], poll_index=2),
+    ]
+    session = _session(events=events, polls=5)
+    s = watch_summary(session)
+    assert "2 change event" in s
+    assert "4 total key changes" in s
