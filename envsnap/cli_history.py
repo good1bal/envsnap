@@ -52,3 +52,40 @@ def cmd_show(label: str, history_file: Optional[str] = None) -> str:
     lines = [f"  {k}={v}" for k, v in sorted(snap.get("vars", {}).items())]
     header = f"Snapshot: {snap.get('label')}  checksum={snap.get('checksum', '')[:8]}"
     return header + "\n" + "\n".join(lines)
+
+
+def cmd_diff(label_a: str, label_b: str, history_file: Optional[str] = None) -> str:
+    """Return a human-readable diff of environment variables between two snapshots.
+
+    Shows variables that were added, removed, or changed between *label_a* and
+    *label_b*.  If either label is not found the function returns an error
+    message rather than raising an exception.
+    """
+    from envsnap.history import get_snapshot
+
+    snap_a = get_snapshot(label_a, history_file)
+    if snap_a is None:
+        return f"Snapshot '{label_a}' not found."
+
+    snap_b = get_snapshot(label_b, history_file)
+    if snap_b is None:
+        return f"Snapshot '{label_b}' not found."
+
+    vars_a = snap_a.get("vars", {})
+    vars_b = snap_b.get("vars", {})
+    all_keys = sorted(set(vars_a) | set(vars_b))
+
+    added = [f"  + {k}={vars_b[k]}" for k in all_keys if k not in vars_a]
+    removed = [f"  - {k}={vars_a[k]}" for k in all_keys if k not in vars_b]
+    changed = [
+        f"  ~ {k}: {vars_a[k]!r} -> {vars_b[k]!r}"
+        for k in all_keys
+        if k in vars_a and k in vars_b and vars_a[k] != vars_b[k]
+    ]
+
+    if not (added or removed or changed):
+        return f"No differences between '{label_a}' and '{label_b}'."
+
+    header = f"Diff '{label_a}' -> '{label_b}':"
+    sections = "\n".join(removed + added + changed)
+    return header + "\n" + sections
