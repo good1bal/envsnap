@@ -65,6 +65,28 @@ def test_to_json_custom_indent():
     assert "    " in output
 
 
+def test_to_json_redacts_sensitive_added_removed_and_changed_values():
+    r = _result(
+        added={"AWS_SECRET_ACCESS_KEY": "added-secret"},
+        removed={"DATABASE_PASSWORD": "removed-secret"},
+        changed={"API_TOKEN": ("old-token", "new-token")},
+    )
+    data = json.loads(to_json(r, redact_sensitive=True))
+    assert data["added"]["AWS_SECRET_ACCESS_KEY"] == "<redacted>"
+    assert data["removed"]["DATABASE_PASSWORD"] == "<redacted>"
+    assert data["changed"] == [{"key": "API_TOKEN", "before": "<redacted>", "after": "<redacted>"}]
+    assert "added-secret" not in json.dumps(data)
+    assert "removed-secret" not in json.dumps(data)
+    assert "old-token" not in json.dumps(data)
+    assert "new-token" not in json.dumps(data)
+
+
+def test_to_json_handles_compare_dict_changed_shape_with_redaction():
+    r = _result(changed={"DATABASE_URL": {"before": "postgres://old", "after": "postgres://new"}})
+    data = json.loads(to_json(r, redact_sensitive=True))
+    assert data["changed"] == [{"key": "DATABASE_URL", "before": "<redacted>", "after": "<redacted>"}]
+
+
 # --- to_csv ---
 
 def _parse_csv(text: str):

@@ -27,11 +27,11 @@ def cmd_diff_export(args: argparse.Namespace) -> None:
 
     fmt = args.format.lower()
     if fmt == "json":
-        output = to_json(result, indent=args.indent)
+        output = to_json(result, indent=args.indent, redact_sensitive=args.redact)
     elif fmt == "csv":
-        output = to_csv(result)
+        output = to_csv(result, redact_sensitive=args.redact)
     elif fmt == "markdown":
-        output = to_markdown(result)
+        output = to_markdown(result, redact_sensitive=args.redact)
     else:
         print(f"error: unknown format '{fmt}'. Choose json, csv, or markdown.", file=sys.stderr)
         sys.exit(1)
@@ -64,6 +64,11 @@ def build_parser(parent: argparse._SubParsersAction | None = None) -> argparse.A
         type=int,
         default=2,
         help="JSON indentation level (default: 2).",
+    )
+    parser.add_argument(
+        "--redact",
+        action="store_true",
+        help="Mask sensitive-key values before exporting the diff.",
     )
     parser.add_argument(
         "--output", "-o",
