@@ -19,6 +19,7 @@ ENV = {
         ("DATABASE_PASSWORD", True),
         ("GITHUB_TOKEN", True),
         ("AUTH_HEADER", True),
+        ("DATABASE_URL", True),
         ("APP_NAME", False),
         ("PORT", False),
     ],
